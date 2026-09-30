@@ -1,5 +1,6 @@
 
-ipconfig /flushdns
+ipconfig /flushdns-> for get addr[info] error
+for this open powershell as administrator and enter the command "ipconfig /flushdns" the issue should be resolved
 
 
 # How to use project structure VS code extension
