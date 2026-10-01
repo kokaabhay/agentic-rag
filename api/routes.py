@@ -9,7 +9,7 @@ from app.retrieval.reranker import rerank_documents
 from app.llm.prompt import build_context
 from app.retrieval.hybrid_search import hyde_retrieval
 from app.llm.hyde import generate_hypothetical_answer
-from app.llm.decide_retrieval import decide_retrieve
+from app.agents.decide_retrieval import decide_retrieve
 router=APIRouter(tags=["API"])
 
 
@@ -24,7 +24,7 @@ def response(response_object:Response_Object):
             detail="Query cannot be empty.",
         )
     k=decide_retrieve(query)
-    print(k)
+    # print(k)
     if  k:
         rewritten_query = rewrite_query(query)
         

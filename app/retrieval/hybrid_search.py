@@ -5,16 +5,17 @@ from openai import OpenAI
 from config import (
     AZURE_SEARCH_ENDPOINT,
     AZURE_SEARCH_API_KEY,
-    AZURE_SEARCH_INDEX,
+    AZURE_SEARCH_INDEX1,
+    AZURE_SEARCH_INDEX2,
     AZURE_OPENAI_ENDPOINT,
     AZURE_OPENAI_API_KEY,
     AZURE_EMBEDDING_DEPLOYMENT,
 )
 
-
+index_name=AZURE_SEARCH_INDEX1
 search_client = SearchClient(
     endpoint=AZURE_SEARCH_ENDPOINT,
-    index_name=AZURE_SEARCH_INDEX,
+    index_name=index_name,
     credential=AzureKeyCredential(AZURE_SEARCH_API_KEY),
 )
 
