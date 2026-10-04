@@ -5,4 +5,4 @@ for this open powershell as administrator and enter the command "ipconfig /flush
 
 # How to use project structure VS code extension
 How to Use
-Go to --> "PS C:\Users\AbhayKoka\agentic-rag\scripts> " in termina CLI and run the script  "python generate_structure.py" your "PROJECT_STRUCTURE.md" files should automatically created at the root or if it exists it will be overwritten
+Go to --> "PS C:\Users\AbhayKoka\agentic-rag\scripts> " in terminal CLI and run the script  "python generate_structure.py" your "PROJECT_STRUCTURE.md" files should automatically created at the root or if it exists it will be overwritten
