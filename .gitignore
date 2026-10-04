@@ -8,7 +8,6 @@ venv/
 
 #environment file
 .env
-project_structure.md
 .vscode/
 .idea/
 
