@@ -44,4 +44,4 @@ def decide_retrieve(prompt: str) -> bool:
     result= response.choices[0].message.content.strip()
     return result=="True"
 
-print(type(bool(decide_retrieve("I need a product...ans also calcium is not healthy for body...i want to buy calicum"))))
+#print(type(bool(decide_retrieve("I need a product...ans also calcium is not healthy for body...i want to buy calicum"))))
