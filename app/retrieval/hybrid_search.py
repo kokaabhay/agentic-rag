@@ -138,20 +138,7 @@ def hyde_retrieval(hyde_answer:str,decision:str,top_k: int = 5):
         )
             search_client=search_client1
    
-          
-
-    results = search_client.search(
-        search_text=hyde_answer,
-        vector_queries=[vector_query],
-        top=top_k,
-        select=[
-            "chunk",
-            "title",
-            "chunk_id",
-            "parent_id",
-        ],
-    )
-  
+            
 
     results = search_client.search(
             vector_queries=[vector_query],
