@@ -94,6 +94,6 @@ def response(response_object:Response_Object):
     if rewritten_query:
         return "Re-written query is : " + rewritten_query+ \
         "\n\nHypothetical answer:"+hypothetical_answer + \
-        "\n\nReason:" + decision["reason"] + " \n\n LLM response is :"+ answer
+        "\n\nReason: " + decision["reason"] + " \n\n LLM response is :"+ answer
     else:
         return " \n\n LLM response is :"+ answer 
