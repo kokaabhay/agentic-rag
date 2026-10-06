@@ -22,6 +22,7 @@ agentic-rag/
 │   ├── agents
 │   │   ├── __pycache__
 │   │   │   └── [contents excluded]
+│   │   ├── __init__.py
 │   │   ├── decide_retrieval.py
 │   │   └── orchestrator.py
 │   ├── llm
@@ -40,6 +41,7 @@ agentic-rag/
 │   │   └── reranker.py
 │   └── __init__.py
 ├── scripts
+│   ├── __init__.py
 │   └── generate_structure.py
 ├── streamlit
 │   └── s.py
@@ -85,8 +87,13 @@ No classes, functions, or imports detected.
 - `app.retrieval.reranker`
 - `app.llm.hyde`
 - `app.agents.decide_retrieval`
+- `app.agents.orchestrator`
 
 ### `app\__init__.py`
+
+No classes, functions, or imports detected.
+
+### `app\agents\__init__.py`
 
 No classes, functions, or imports detected.
 
@@ -101,7 +108,17 @@ No classes, functions, or imports detected.
 
 ### `app\agents\orchestrator.py`
 
-No classes, functions, or imports detected.
+**Classes:**
+- `Orchestrator`
+
+**Functions:**
+- `__init__()`
+- `orchestrate()`
+
+**Imports:**
+- `openai`
+- `json`
+- `config`
 
 ### `app\llm\__init__.py`
 
@@ -162,6 +179,7 @@ No classes, functions, or imports detected.
 - `azure.search.documents`
 - `azure.search.documents.models`
 - `openai`
+- `app.agents.orchestrator`
 - `config`
 
 ### `app\retrieval\reranker.py`
@@ -188,6 +206,10 @@ No classes, functions, or imports detected.
 **Imports:**
 - `fastapi`
 - `api.routes`
+
+### `scripts\__init__.py`
+
+No classes, functions, or imports detected.
 
 ### `scripts\generate_structure.py`
 
