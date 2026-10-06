@@ -1,6 +1,6 @@
 import certifi
 import httpx
-
+import logging
 from config import (
     AZURE_RERANK_ENDPOINT,
     AZURE_RERANK_API_KEY,
@@ -32,29 +32,37 @@ def rerank_documents(
         ],
         "top_n": top_k,
     }
+    try:
+        #raise 
+        response = http_client.post(
+            AZURE_RERANK_ENDPOINT,
+            headers={
+                "Authorization": f"Bearer {AZURE_RERANK_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        )
 
-    response = http_client.post(
-        AZURE_RERANK_ENDPOINT,
-        headers={
-            "Authorization": f"Bearer {AZURE_RERANK_API_KEY}",
-            "Content-Type": "application/json",
-        },
-        json=payload,
-    )
+        response.raise_for_status()
 
-    response.raise_for_status()
+        result = response.json()
 
-    result = response.json()
+        reranked_documents = []
 
-    reranked_documents = []
-
-    for item in result["results"]:
-        document = documents[item["index"]].copy()        
-        document["rerank_score"] = item["relevance_score"]
-        # for i in document.keys():
-        #     print(i)
-            
-        reranked_documents.append(document)
-        # for i in reranked_documents:
-        #     print(i)
-    return reranked_documents
+        for item in result["results"]:
+            document = documents[item["index"]].copy()        
+            document["rerank_score"] = item["relevance_score"]
+            # for i in document.keys():
+            #     print(i)
+                
+            reranked_documents.append(document)
+            # for i in reranked_documents:
+            #     print(i)
+        return reranked_documents
+    except Exception as e:
+        print(str(e))
+        print("Reranker not responding: \n")
+        print("="*60,"\n")
+        print("Proceeding to build prompt phase without reranking documents")
+        print("="*60)
+        return documents

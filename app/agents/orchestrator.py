@@ -89,23 +89,33 @@ class Orchestrator:
 
         Do not answer the user's question.
 
-        Re-Written user query:
+        user query:
         {user_query}
         """
-
-        response = client.chat.completions.create(
-            model=AZURE_CHAT_DEPLOYMENT,
-            messages=[
-                {
-                    "role": "system",
-                    "content": system_prompt
-                }
-            ],
-            temperature=0,
-            tools=tools
-        )
-        decision = json.loads(response.choices[0].message.content)
-        return decision
+        try:
+            response = client.chat.completions.create(
+                model=AZURE_CHAT_DEPLOYMENT,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": system_prompt
+                    }
+                ],
+                temperature=0,
+                tools=tools
+            )
+            decision = json.loads(response.choices[0].message.content)
+            return decision
+        except Exception as e:
+            print(str(e))
+            print("Orchestrator not responding: \n")
+            print("="*60,"\n")
+            print("Proceeding to build retrieval phase with both retrieval documents in pipeline")
+            print("="*60)
+            return {{
+                        "documents": "both",
+                        "reason": "The orchestrator failed so considering both documents for maximum context"
+                    }}
 
 
 

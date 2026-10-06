@@ -42,7 +42,8 @@ def response(response_object:Response_Object):
         
         documents = hybrid_search(rewritten_query,decision["documents"])
         print(f"\nRetrieved {len(documents)} documents.")
-        h_documents=hyde_retrieval(hypothetical_answer,decision["documents"])
+        
+        h_documents=hyde_retrieval(hypothetical_answer,decision["documents"]) if hypothetical_answer else []
         
         # for i in documents:
         #     print(i)
@@ -55,7 +56,7 @@ def response(response_object:Response_Object):
         context_documents=build_context(reranked_documents)
         #print("context documents: ",context_documents)
         print("\nReranked documents:\n")
-
+        
         for i, document in enumerate(
             reranked_documents,
             start=1,
@@ -63,7 +64,8 @@ def response(response_object:Response_Object):
             print(f"--- Result {i} ---")
             print(f"Source: {document['source']}")
             print(f"Search score: {document['score']}")
-            print(f"Rerank score: {document['rerank_score']}")
+            if document['rerank_score']:
+                print(f"Rerank score: {document['rerank_score']}")
             print(document["content"][:500])
             print()
 

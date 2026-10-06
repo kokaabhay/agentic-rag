@@ -20,31 +20,35 @@ def generate_hypothetical_answer(query: str) -> str:
     Generate a hypothetical answer to the user's question into a concise search reference 
     optimized for semantic based knowledge-base retrieval.
     """
-
-    response = client.chat.completions.create(
-        model=AZURE_CHAT_DEPLOYMENT,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "Generate a concise hypothetical answer that represents "
-                    "the information likely to be found in a customer-support "
-                    "knowledge base. Include important technical terms and "
-                    "concepts from the user's question. "
-                    "Do not mention that the answer is hypothetical. "
-                    "Do not add unrelated information. "
-                    "Return only the hypothetical answer."
-                    
-                ),
-            },
-            {
-                "role": "user",
-                "content": query,
-            },
-        ],
-        temperature=0,
-    )
-
-    hypothetical_answer = response.choices[0].message.content.strip()
-
-    return hypothetical_answer
+    try:
+        response = client.chat.completions.create(
+            model=AZURE_CHAT_DEPLOYMENT,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Generate a concise hypothetical answer that represents "
+                        "the information likely to be found in a customer-support "
+                        "knowledge base. Include important technical terms and "
+                        "concepts from the user's question. "
+                        "Do not mention that the answer is hypothetical. "
+                        "Do not add unrelated information. "
+                        "Return only the hypothetical answer."                        
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": query,
+                },
+            ],
+            temperature=0,
+        )
+        hypothetical_answer = response.choices[0].message.content.strip()
+        return hypothetical_answer
+    except Exception as e:
+        print(str(e))
+        print("Hypothetical answer generator not responding: \n")
+        print("="*60,"\n")
+        print("Proceeding without hypothetical answer")
+        print("="*60)
+        return None
