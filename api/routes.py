@@ -27,9 +27,8 @@ def response(response_object:Response_Object):
     k=decide_retrieve(query)
     # print(k)
     if  k:        
-
-        rewritten_query = rewrite_query(query)
-        decision=Orchestrator.orchestrate(rewritten_query)
+        decision=Orchestrator.orchestrate(query)
+        rewritten_query = rewrite_query(query)       
         
         print("\nOriginal query:")
         print(query)
