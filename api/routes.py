@@ -10,6 +10,7 @@ from app.llm.prompt import build_context
 from app.retrieval.hybrid_search import hyde_retrieval
 from app.llm.hyde import generate_hypothetical_answer
 from app.agents.decide_retrieval import decide_retrieve
+from app.agents.orchestrator import Orchestrator
 router=APIRouter(tags=["API"])
 
 
@@ -25,8 +26,10 @@ def response(response_object:Response_Object):
         )
     k=decide_retrieve(query)
     # print(k)
-    if  k:
+    if  k:        
+
         rewritten_query = rewrite_query(query)
+        decision=Orchestrator.orchestrate(rewritten_query)
         
         print("\nOriginal query:")
         print(query)
@@ -38,9 +41,9 @@ def response(response_object:Response_Object):
         print("\nHypothetical answer:")
         print(hypothetical_answer)
         
-        documents = hybrid_search(rewritten_query)
+        documents = hybrid_search(rewritten_query,decision["documents"])
         print(f"\nRetrieved {len(documents)} documents.")
-        h_documents=hyde_retrieval(hypothetical_answer)
+        h_documents=hyde_retrieval(hypothetical_answer,decision["documents"])
         
         # for i in documents:
         #     print(i)
@@ -89,6 +92,8 @@ def response(response_object:Response_Object):
     print("=" * 60)
     print(answer)
     if rewritten_query:
-        return "Re-written query is : " + rewritten_query+ "\n\nHypothetical answer:"+hypothetical_answer + " \n\n LLM response is :"+ answer
+        return "Re-written query is : " + rewritten_query+ \
+        "\n\nHypothetical answer:"+hypothetical_answer + \
+        "\n\nReason:" + decision["reason"] + " \n\n LLM response is :"+ answer
     else:
         return " \n\n LLM response is :"+ answer 

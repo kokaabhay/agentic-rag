@@ -76,5 +76,5 @@ Instructions:
 - Do not invent information.
 - Do not use outside knowledge.
 - Answer directly.
-- When possible, mention the source document.
+- When possible, mention the source document as well.
 """.strip()
