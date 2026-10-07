@@ -1,4 +1,4 @@
-from fastapi import FastAPI,HTTPException,APIRouter
+from fastapi import FastAPI,HTTPException,APIRouter, UploadFile, File
 from api.response_object import Response_Object
 from pydantic import Field,BaseModel
 from app.llm.query_rewriter import get_rewritten_query
@@ -11,7 +11,18 @@ from app.retrieval.hybrid_search import hyde_retrieval
 from app.llm.hyde import get_hypothetical_answer
 from app.agents.decide_retrieval import get_retrieval_decision
 from app.agents.orchestrator import Orchestrator
+from azure.storage.blob import BlobServiceClient
+from azure.search.documents.indexes import SearchIndexerClient
+from azure.core.credentials import AzureKeyCredential
 import logging
+logger=logging.getLogger(__name__)
+from config import(
+    AZURE_STORAGE_CONNECTION_STRING,
+    AZURE_STORAGE_CONTAINER1,
+    AZURE_SEARCH_ENDPOINT,
+    AZURE_SEARCH_API_KEY,
+    AZURE_SEARCH_INDEXER1,
+)
 router=APIRouter(tags=["API"])
 
 
@@ -99,3 +110,79 @@ def response(response_object:Response_Object):
         "\n\nReason: " + decision["reason"] + " \n\n LLM response is :"+ answer
     else:
         return " \n\n LLM response is :"+ answer 
+
+
+blob_service_client = BlobServiceClient.from_connection_string(
+    AZURE_STORAGE_CONNECTION_STRING
+)
+
+search_indexer_client = SearchIndexerClient(
+    endpoint=AZURE_SEARCH_ENDPOINT,
+    credential=AzureKeyCredential(AZURE_SEARCH_API_KEY),
+)
+
+# @router.post("/upload_Technical")
+@router.post("/documents/upload")
+async def upload_document(file: UploadFile = File(...)):
+    allowed_extensions = {".pdf", ".docx", ".txt", ".md"}
+
+    filename = file.filename
+
+    if not filename:
+        raise HTTPException(
+            status_code=400,
+            detail="Filename is required."
+        )
+
+    extension = "." + filename.split(".")[-1].lower()
+
+    if extension not in allowed_extensions:
+        raise HTTPException(
+            status_code=400,
+            detail="Only PDF, DOCX, TXT and MD files are supported."
+        )
+
+    try:
+        blob_client = blob_service_client.get_blob_client(
+            container=AZURE_STORAGE_CONTAINER1,
+            blob=filename,
+        )
+
+        file_content = await file.read()
+
+        blob_client.upload_blob(
+            file_content,
+            overwrite=True,
+        )
+        logger.info(
+            "Uploading '%s' to container '%s'",
+            filename,
+            AZURE_STORAGE_CONTAINER1,
+        )
+
+        blob_client.upload_blob(
+            file_content,
+            overwrite=True,
+        )
+
+        logger.info(
+            "Blob uploaded successfully: %s",
+            blob_client.url,
+        )
+        search_indexer_client.run_indexer(
+                    AZURE_SEARCH_INDEXER1
+                )
+
+        return {
+            "message": "Document uploaded successfully. Indexing has been started.",
+            "filename": filename,
+            "indexer": AZURE_SEARCH_INDEXER1,
+        }
+
+    except Exception as e:
+        logger.exception("Document upload/indexing failed")
+
+        raise HTTPException(
+            status_code=500,
+            detail="Document upload or indexing failed."
+        )

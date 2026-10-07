@@ -2,7 +2,6 @@ from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
 from azure.search.documents.models import VectorizedQuery
 from openai import OpenAI
-from app.agents.orchestrator import Orchestrator
 from config import (
     AZURE_SEARCH_ENDPOINT,
     AZURE_SEARCH_API_KEY,
