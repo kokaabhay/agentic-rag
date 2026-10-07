@@ -28,3 +28,4 @@ azure-storage-blob
 azure-search-documents
 azure-identity
 tenacity
+black
