@@ -16,8 +16,8 @@ def build_context(documents: list[dict]) -> list[dict]:
         if document["content"]:
             content = document.get("content", "")
 
-        if not content:
-            continue
+            if not content:
+                continue
 
         token_count = len(encoding.encode(content))
 
