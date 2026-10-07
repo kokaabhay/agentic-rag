@@ -1,6 +1,6 @@
 from openai import AzureOpenAI
 import json
-
+from tenacity import retry,wait_fixed,stop_after_attempt
 from openai import OpenAI
 
 from config import (
@@ -31,69 +31,76 @@ AGENTS = {
 
 
 class Orchestrator:
-
     def __init__(self):
-        pass
+       pass
         
-
-    def orchestrate(user_query: str):
-        tools=[]
+    def build_orchestrator_prompt(self,user_query: str,rewritten_query:str)-> str:
         system_prompt = f"""
-        You are the orchestrator of a customer-support agentic AI system.
-        Your job is NOT to answer the user's question directly.
-        Your job is to decide which knowledge base should be used
-        to retrieve information for answering the user's question.
-        There are two knowledge bases.
-
-        DOCUMENT 1:
-        This document provides customer support representatives with
-        information and standard responses for common customer questions
-        and issues.
-
-        It primarily covers:
-        - hardware
-        - Wi-Fi
-        - device pairing
-        - common troubleshooting
-        - standard customer support issues
-
-        DOCUMENT 2:
-        This document focuses on:
-        - account management
-        - household access
-        - service configuration
-        - device ownership
-        - notifications
-        - customer data requests
-
-        It is intended for situations that are different from
-        hardware, Wi-Fi, and device-pairing troubleshooting.
-
-        Your task is to determine whether the user's question requires
-        information from document 1, document 2, or both.
-
-        Return ONLY valid JSON.
-
-        The JSON format must be:
-
-        {{
-            "documents": "1",
-            "reason": "Explain why this document was selected."
-        }}
-
-        The "documents" field MUST contain exactly one of:
-
-        "1"
-        "2"
-        "both"
-
-        Do not answer the user's question.
-
-        user query:
-        {user_query}
-        """
-        try:
-            response = client.chat.completions.create(
+                You are the orchestrator of a customer-support agentic AI system.
+                Your job is NOT to answer the user's question directly.
+                Your job is to decide which knowledge base should be used
+                to retrieve information for answering the user's question.
+                You will be given the user's query and then the rewritten query as well.
+                The rewritten query is a re-written query by the "LLm" of the original user's query
+        
+                There are two knowledge bases.
+        
+                DOCUMENT 1:
+                This document provides customer support representatives with
+                information and standard responses for common customer questions
+                and issues.
+        
+                It primarily covers:
+                - hardware
+                - Wi-Fi
+                - device pairing
+                - common troubleshooting
+                - standard customer support issues
+        
+                DOCUMENT 2:
+                This document focuses on:
+                - account management
+                - household access
+                - service configuration
+                - device ownership
+                - notifications
+                - customer data requests
+        
+                It is intended for situations that are different from
+                hardware, Wi-Fi, and device-pairing troubleshooting.
+        
+                Your task is to determine whether the user's question requires
+                information from document 1, document 2, or both.
+        
+                Return ONLY valid JSON.
+        
+                The JSON format must be:
+        
+                {{
+                    "documents": "1",
+                    "reason": "Explain why this document was selected."
+                }}
+        
+                The "documents" field MUST contain exactly one of:
+        
+                "1"
+                "2"
+                "both"
+        
+                Do not answer the user's question.
+        
+                user query:
+                {user_query}
+                Re-written user query:
+                {rewritten_query}
+                """
+        return system_prompt
+    # Tries 1 times with a delay of 10 seconds between each attempt
+    # @retry(stop_after_attempt(1),wait_fixed(10))
+    def orchestrate(self,user_query: str,rewritten_query:str)-> dict:
+        tools=[]
+        system_prompt=self.build_orchestrator_prompt(user_query,rewritten_query)
+        response = client.chat.completions.create(
                 model=AZURE_CHAT_DEPLOYMENT,
                 messages=[
                     {
@@ -104,18 +111,22 @@ class Orchestrator:
                 temperature=0,
                 tools=tools
             )
-            decision = json.loads(response.choices[0].message.content)
-            return decision
+        decision = json.loads(response.choices[0].message.content)
+        return decision
+
+    def get_decision(self,user_query: str,rewritten_query:str)-> dict:
+        try:
+            return self.orchestrate(user_query,rewritten_query)
         except Exception as e:
             print(str(e))
-            print("Orchestrator not responding: \n")
+            print("Orchestrator not responding probably due to LLM API failure: \n")
             print("="*60,"\n")
             print("Proceeding to build retrieval phase with both retrieval documents in pipeline")
             print("="*60)
-            return {{
+            return {
                         "documents": "both",
                         "reason": "The orchestrator failed so considering both documents for maximum context"
-                    }}
+                    }
 
 
 

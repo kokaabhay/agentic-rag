@@ -1,5 +1,6 @@
 from openai import OpenAI
-
+import logging
+from tenacity import retry, stop_after_attempt, wait_fixed
 from config import (
     AZURE_CHAT_DEPLOYMENT,
     AZURE_OPENAI_API_KEY,
@@ -12,34 +13,43 @@ client = OpenAI(
     api_key=AZURE_OPENAI_API_KEY,
 )
 
-
+# Tries 1 times with a delay of 10 seconds between each attempt
+# @retry(stop_after_attempt(1),wait_fixed(10))
 def rewrite_query(query: str) -> str:
     """
     Rewrite a user's question into a concise search query
     optimized for knowledge-base retrieval.
     """
-
     response = client.chat.completions.create(
-        model=AZURE_CHAT_DEPLOYMENT,
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You rewrite customer support questions for "
-                    "knowledge-base search. "
-                    "Return only the rewritten search query. "
-                    "Preserve the user's intent and important terms. "
-                    "Do not answer the question."
-                ),
-            },
-            {
-                "role": "user",
-                "content": query,
-            },
-        ],
-        temperature=0,
-    )
-
+            model=AZURE_CHAT_DEPLOYMENT,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You rewrite customer support questions for "
+                        "knowledge-base search. "
+                        "Return only the rewritten search query. "
+                        "Preserve the user's intent and important terms. "
+                        "Do not answer the question."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": query,
+                },
+            ],
+            temperature=0,
+        )
     rewritten_query = response.choices[0].message.content.strip()
-
     return rewritten_query
+
+def get_rewritten_query(query:str)-> str:
+    try:
+        return rewrite_query(query)
+    except Exception as e:
+        print(str(e))
+        print("Query Re-Writing has Failed probably due to LLM API failure: \n")
+        print("="*60,"\n")
+        print("Proceeding with empty Re-Written query and user query will be used as default")
+        print("="*60)
+        return ""

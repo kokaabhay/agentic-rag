@@ -1,16 +1,17 @@
 from fastapi import FastAPI,HTTPException,APIRouter
 from api.response_object import Response_Object
 from pydantic import Field,BaseModel
-from app.llm.query_rewriter import rewrite_query
+from app.llm.query_rewriter import get_rewritten_query
 from app.llm.prompt import build_prompt
-from app.llm.service import generate_answer
+from app.llm.service import get_answer
 from app.retrieval.hybrid_search import hybrid_search
 from app.retrieval.reranker import rerank_documents
 from app.llm.prompt import build_context
 from app.retrieval.hybrid_search import hyde_retrieval
-from app.llm.hyde import generate_hypothetical_answer
-from app.agents.decide_retrieval import decide_retrieve
+from app.llm.hyde import get_hypothetical_answer
+from app.agents.decide_retrieval import get_retrieval_decision
 from app.agents.orchestrator import Orchestrator
+import logging
 router=APIRouter(tags=["API"])
 
 
@@ -24,19 +25,19 @@ def response(response_object:Response_Object):
             status_code=400,
             detail="Query cannot be empty.",
         )
-    k=decide_retrieve(query)
+    k=get_retrieval_decision(query)
     # print(k)
     if  k:        
-        decision=Orchestrator.orchestrate(query)
-        rewritten_query = rewrite_query(query)       
-        
+        orchestrator=Orchestrator()
+        rewritten_query = get_rewritten_query(query)       
+        decision=orchestrator.get_decision(query,rewritten_query)
         print("\nOriginal query:")
         print(query)
 
         print("\nRewritten query:")
         print(rewritten_query)
          
-        hypothetical_answer=generate_hypothetical_answer(rewritten_query)
+        hypothetical_answer=get_hypothetical_answer(rewritten_query,query)
         print("\nHypothetical answer:")
         print(hypothetical_answer)
         
@@ -86,7 +87,7 @@ def response(response_object:Response_Object):
         h_documents=reranked_h_documents,
     )
 
-    answer = generate_answer(prompt)
+    answer = get_answer(prompt)
 
     print("\n" + "=" * 60)
     print("FINAL ANSWER")

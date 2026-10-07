@@ -14,6 +14,7 @@ http_client = httpx.Client(
 )
 
 #print("Reranker endpoint:", repr(AZURE_RERANK_ENDPOINT))
+
 def rerank_documents(
     query: str,
     documents: list[dict],
@@ -61,7 +62,7 @@ def rerank_documents(
         return reranked_documents
     except Exception as e:
         print(str(e))
-        print("Reranker not responding: \n")
+        print("Reranker not responding probably due to LLM API failure: \n")
         print("="*60,"\n")
         print("Proceeding to build prompt phase without reranking documents")
         print("="*60)
