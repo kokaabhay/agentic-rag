@@ -1,3 +1,4 @@
+# Necessary imports
 from fastapi import FastAPI, HTTPException, APIRouter, UploadFile, File
 from api.response_object import Response_Object
 from pydantic import Field, BaseModel
@@ -52,7 +53,7 @@ def response(response_object: Response_Object):
         print("\nHypothetical answer:")
         print(hypothetical_answer)
 
-        documents = hybrid_search(rewritten_query, decision["documents"])
+        documents = hybrid_search(query, rewritten_query, decision["documents"])
         print(f"\nRetrieved {len(documents)} documents.")
 
         h_documents = (

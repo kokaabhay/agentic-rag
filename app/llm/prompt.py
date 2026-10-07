@@ -1,17 +1,23 @@
+# Necessary imports
 import tiktoken
 from typing import Optional
 from config import MAX_CONTEXT_TOKENS
 
+# cl100k_base is a tokenizer commonly associated with OpenAI
+# create tokenizer using tiktoken
 encoding = tiktoken.get_encoding("cl100k_base")
 
-
+# This function controls how much retrieved text is allowed into the LLM context.
 def build_context(documents: list[dict]) -> list[dict]:
     selected_documents = []
     total_tokens = 0
     # print(type(documents))
     for document in documents:
         if document["content"]:
-            content = document["content"]
+            content = document.get("content", "")
+
+        if not content:
+            continue
 
         token_count = len(encoding.encode(content))
 

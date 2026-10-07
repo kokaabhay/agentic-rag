@@ -1,3 +1,4 @@
+# Necessary imports
 from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_fixed
 from config import (
@@ -6,12 +7,14 @@ from config import (
     AZURE_OPENAI_ENDPOINT,
 )
 
+# create the client to talk to your Azure OpenAI resource.
 client = OpenAI(
     base_url=f"{AZURE_OPENAI_ENDPOINT.rstrip('/')}/openai/v1/",
     api_key=AZURE_OPENAI_API_KEY,
 )
 
 
+# Generates the final LLM Response to be replied to the end user asking the question
 # Tries 1 times with a delay of 10 seconds between each attempt
 # @retry(stop_after_attempt(1),wait_fixed(10))
 def generate_answer(prompt: str) -> str:
@@ -34,7 +37,7 @@ def generate_answer(prompt: str) -> str:
     )
     return response.choices[0].message.content.strip()
 
-
+# This function will call the generate_answer function and in case of failure ensures a working fallback 
 def get_answer(prompt: str) -> str:
     try:
         return generate_answer(prompt)

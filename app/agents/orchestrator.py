@@ -1,14 +1,18 @@
+# Necessary imports
 from openai import AzureOpenAI
 import json
 from tenacity import retry, wait_fixed, stop_after_attempt
 from openai import OpenAI
+import logging
 
+logger = logging.getLogger(__name__)
 from config import (
     AZURE_CHAT_DEPLOYMENT,
     AZURE_OPENAI_API_KEY,
     AZURE_OPENAI_ENDPOINT,
 )
 
+# create the client to talk to your Azure OpenAI resource.
 client = OpenAI(
     base_url=f"{AZURE_OPENAI_ENDPOINT.rstrip('/')}/openai/v1/",
     api_key=AZURE_OPENAI_API_KEY,
@@ -28,10 +32,12 @@ AGENTS = {
 }
 
 
+# Orchestrator class
 class Orchestrator:
     def __init__(self):
         pass
 
+    # This function defines the prompt template for orchestration
     def build_orchestrator_prompt(self, user_query: str, rewritten_query: str) -> str:
         system_prompt = f"""
                 You are the orchestrator of a customer-support agentic AI system.
@@ -94,6 +100,7 @@ class Orchestrator:
                 """
         return system_prompt
 
+    # This function will decide which of the 2 knowledge-bases (Documents) or both should be included for retrieval based on the user and rewitten-query
     # Tries 1 times with a delay of 10 seconds between each attempt
     # @retry(stop_after_attempt(1),wait_fixed(10))
     def orchestrate(self, user_query: str, rewritten_query: str) -> dict:
@@ -108,6 +115,7 @@ class Orchestrator:
         decision = json.loads(response.choices[0].message.content)
         return decision
 
+    # This function will call the orchestrate function and in case of failure ensures a working fallback
     def get_decision(self, user_query: str, rewritten_query: str) -> dict:
         try:
             return self.orchestrate(user_query, rewritten_query)
