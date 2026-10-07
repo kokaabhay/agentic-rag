@@ -1,15 +1,13 @@
 from openai import AzureOpenAI
 import json
-from tenacity import retry,wait_fixed,stop_after_attempt
+from tenacity import retry, wait_fixed, stop_after_attempt
 from openai import OpenAI
 
 from config import (
     AZURE_CHAT_DEPLOYMENT,
     AZURE_OPENAI_API_KEY,
     AZURE_OPENAI_ENDPOINT,
-   
 )
-
 
 client = OpenAI(
     base_url=f"{AZURE_OPENAI_ENDPOINT.rstrip('/')}/openai/v1/",
@@ -19,22 +17,22 @@ client = OpenAI(
 AGENTS = {
     "rag_agent": {
         "description": "Answers questions using the company's knowledge base."
-    # },
-    # "order_agent": {
-    #     "description": "Checks order status and order information."
-    # },
-    # "support_agent": {
-    #     "description": "Handles general customer support conversations."
-    # }
+        # },
+        # "order_agent": {
+        #     "description": "Checks order status and order information."
+        # },
+        # "support_agent": {
+        #     "description": "Handles general customer support conversations."
+        # }
     }
 }
 
 
 class Orchestrator:
     def __init__(self):
-       pass
-        
-    def build_orchestrator_prompt(self,user_query: str,rewritten_query:str)-> str:
+        pass
+
+    def build_orchestrator_prompt(self, user_query: str, rewritten_query: str) -> str:
         system_prompt = f"""
                 You are the orchestrator of a customer-support agentic AI system.
                 Your job is NOT to answer the user's question directly.
@@ -95,46 +93,36 @@ class Orchestrator:
                 {rewritten_query}
                 """
         return system_prompt
+
     # Tries 1 times with a delay of 10 seconds between each attempt
     # @retry(stop_after_attempt(1),wait_fixed(10))
-    def orchestrate(self,user_query: str,rewritten_query:str)-> dict:
-        tools=[]
-        system_prompt=self.build_orchestrator_prompt(user_query,rewritten_query)
+    def orchestrate(self, user_query: str, rewritten_query: str) -> dict:
+        tools = []
+        system_prompt = self.build_orchestrator_prompt(user_query, rewritten_query)
         response = client.chat.completions.create(
-                model=AZURE_CHAT_DEPLOYMENT,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": system_prompt
-                    }
-                ],
-                temperature=0,
-                tools=tools
-            )
+            model=AZURE_CHAT_DEPLOYMENT,
+            messages=[{"role": "system", "content": system_prompt}],
+            temperature=0,
+            tools=tools,
+        )
         decision = json.loads(response.choices[0].message.content)
         return decision
 
-    def get_decision(self,user_query: str,rewritten_query:str)-> dict:
+    def get_decision(self, user_query: str, rewritten_query: str) -> dict:
         try:
-            return self.orchestrate(user_query,rewritten_query)
+            return self.orchestrate(user_query, rewritten_query)
         except Exception as e:
             print(str(e))
             print("Orchestrator not responding probably due to LLM API failure: \n")
-            print("="*60,"\n")
-            print("Proceeding to build retrieval phase with both retrieval documents in pipeline")
-            print("="*60)
+            print("=" * 60, "\n")
+            print(
+                "Proceeding to build retrieval phase with both retrieval documents in pipeline"
+            )
+            print("=" * 60)
             return {
-                        "documents": "both",
-                        "reason": "The orchestrator failed so considering both documents for maximum context"
-                    }
-
-
-
-
-
-
-
-
+                "documents": "both",
+                "reason": "The orchestrator failed so considering both documents for maximum context",
+            }
 
 
 # """ from openai import AzureOpenAI

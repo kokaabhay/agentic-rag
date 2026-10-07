@@ -1,7 +1,8 @@
 from azure.search.documents.indexes import SearchIndexerClient
 from azure.core.credentials import AzureKeyCredential
-import os 
+import os
 from dotenv import load_dotenv
+
 load_dotenv()
 AZURE_SEARCH_INDEXER1 = os.getenv("AZURE_SEARCH_INDEXER1")
 AZURE_SEARCH_ENDPOINT = os.getenv("AZURE_SEARCH_ENDPOINT")
@@ -16,9 +17,7 @@ search_indexer_client = SearchIndexerClient(
 def run_indexer():
     print(f"Running indexer: {AZURE_SEARCH_INDEXER1}")
 
-    search_indexer_client.run_indexer(
-        AZURE_SEARCH_INDEXER1
-    )
+    search_indexer_client.run_indexer(AZURE_SEARCH_INDEXER1)
 
     print("Indexer started successfully.")
 

@@ -1,8 +1,6 @@
-
 import tiktoken
 from typing import Optional
 from config import MAX_CONTEXT_TOKENS
-
 
 encoding = tiktoken.get_encoding("cl100k_base")
 
@@ -10,14 +8,12 @@ encoding = tiktoken.get_encoding("cl100k_base")
 def build_context(documents: list[dict]) -> list[dict]:
     selected_documents = []
     total_tokens = 0
-    #print(type(documents))
+    # print(type(documents))
     for document in documents:
         if document["content"]:
             content = document["content"]
 
-        token_count = len(
-            encoding.encode(content)
-        )
+        token_count = len(encoding.encode(content))
 
         if total_tokens + token_count > MAX_CONTEXT_TOKENS:
             break
@@ -29,21 +25,21 @@ def build_context(documents: list[dict]) -> list[dict]:
     return selected_documents
 
 
-def build_prompt(query: str, documents: list[dict]|None, h_documents: list[dict]|None) -> str:
+def build_prompt(
+    query: str, documents: list[dict] | None, h_documents: list[dict] | None
+) -> str:
     context_parts = []
-    hyde_context_parts=[]
+    hyde_context_parts = []
     if documents:
         for i, document in enumerate(documents, start=1):
             context_parts.append(
-                f"[Source {i}: {document['source']}]\n"
-                f"{document['content']}"
+                f"[Source {i}: {document['source']}]\n" f"{document['content']}"
             )
     context = "\n\n".join(context_parts)
     if h_documents:
         for i, document in enumerate(h_documents, start=1):
             hyde_context_parts.append(
-                f"[Source {i}: {document['source']}]\n"
-                f"{document['content']}"
+                f"[Source {i}: {document['source']}]\n" f"{document['content']}"
             )
     h_context = "\n\n".join(hyde_context_parts)
     return f"""

@@ -4,7 +4,8 @@ from config import (
     AZURE_OPENAI_API_KEY,
     AZURE_OPENAI_ENDPOINT,
 )
-from tenacity import retry,wait_fixed,stop_after_attempt
+from tenacity import retry, wait_fixed, stop_after_attempt
+
 client = OpenAI(
     base_url=f"{AZURE_OPENAI_ENDPOINT.rstrip('/')}/openai/v1/",
     api_key=AZURE_OPENAI_API_KEY,
@@ -32,29 +33,28 @@ def decide_retrieve(prompt: str) -> bool:
                     user:what is your product?-> the bot needs to get context from documents to answer the question correctly
                     Remember the question is supposed to be relevant to our product
                     Return False if retrieval is not needed and True if it is needed based on the user query"""
-                                                    ),
+                ),
             },
             {
                 "role": "user",
                 "content": prompt,
             },
         ],
-   
         temperature=0,
     )
 
-    result= response.choices[0].message.content.strip()
-    return result=="True"
+    result = response.choices[0].message.content.strip()
+    return result == "True"
 
-#print(type(bool(decide_retrieve("I need a product...ans also calcium is not healthy for body...i want to buy calicum"))))
+
+# print(type(bool(decide_retrieve("I need a product...ans also calcium is not healthy for body...i want to buy calicum"))))
 def get_retrieval_decision(prompt: str) -> bool:
     try:
         return decide_retrieve(prompt)
     except Exception as e:
         print(str(e))
         print("unable to get retrieval decision probably due to LLM API failure  : \n")
-        print("="*60,"\n")
+        print("=" * 60, "\n")
         print("Proceeding initiate retrieval process by default")
-        print("="*60)
+        print("=" * 60)
         return True
-    

@@ -7,13 +7,13 @@ from config import (
     AZURE_RERANK_DEPLOYMENT,
 )
 
-
 http_client = httpx.Client(
     verify=False,
     timeout=60.0,
 )
 
-#print("Reranker endpoint:", repr(AZURE_RERANK_ENDPOINT))
+# print("Reranker endpoint:", repr(AZURE_RERANK_ENDPOINT))
+
 
 def rerank_documents(
     query: str,
@@ -27,14 +27,11 @@ def rerank_documents(
     payload = {
         "model": AZURE_RERANK_DEPLOYMENT,
         "query": query,
-        "documents": [
-            document["content"]
-            for document in documents
-        ],
+        "documents": [document["content"] for document in documents],
         "top_n": top_k,
     }
     try:
-        #raise 
+        # raise
         response = http_client.post(
             AZURE_RERANK_ENDPOINT,
             headers={
@@ -51,11 +48,11 @@ def rerank_documents(
         reranked_documents = []
 
         for item in result["results"]:
-            document = documents[item["index"]].copy()        
+            document = documents[item["index"]].copy()
             document["rerank_score"] = item["relevance_score"]
             # for i in document.keys():
             #     print(i)
-                
+
             reranked_documents.append(document)
             # for i in reranked_documents:
             #     print(i)
@@ -63,7 +60,7 @@ def rerank_documents(
     except Exception as e:
         print(str(e))
         print("Reranker not responding probably due to LLM API failure: \n")
-        print("="*60,"\n")
+        print("=" * 60, "\n")
         print("Proceeding to build prompt phase without reranking documents")
-        print("="*60)
+        print("=" * 60)
         return documents

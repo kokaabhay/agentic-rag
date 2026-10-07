@@ -3,36 +3,36 @@ from tenacity import retry, stop_after_attempt, wait_fixed
 from config import (
     AZURE_CHAT_DEPLOYMENT,
     AZURE_OPENAI_API_KEY,
-    AZURE_OPENAI_ENDPOINT,   
+    AZURE_OPENAI_ENDPOINT,
 )
-
 
 client = OpenAI(
     base_url=f"{AZURE_OPENAI_ENDPOINT.rstrip('/')}/openai/v1/",
     api_key=AZURE_OPENAI_API_KEY,
 )
 
+
 # Tries 1 times with a delay of 10 seconds between each attempt
 # @retry(stop_after_attempt(1),wait_fixed(10))
 def generate_answer(prompt: str) -> str:
-        response = client.chat.completions.create(
-            model=AZURE_CHAT_DEPLOYMENT,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a customer support assistant "
-                        "that answers using a provided knowledge base."
-                    ),
-                },
-                {
-                    "role": "user",
-                    "content": prompt,
-                },
-            ],   
-            temperature=0,
-        )
-        return response.choices[0].message.content.strip()
+    response = client.chat.completions.create(
+        model=AZURE_CHAT_DEPLOYMENT,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a customer support assistant "
+                    "that answers using a provided knowledge base."
+                ),
+            },
+            {
+                "role": "user",
+                "content": prompt,
+            },
+        ],
+        temperature=0,
+    )
+    return response.choices[0].message.content.strip()
 
 
 def get_answer(prompt: str) -> str:

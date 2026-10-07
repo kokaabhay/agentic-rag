@@ -7,11 +7,11 @@ from config import (
     AZURE_OPENAI_ENDPOINT,
 )
 
-
 client = OpenAI(
     base_url=f"{AZURE_OPENAI_ENDPOINT.rstrip('/')}/openai/v1/",
     api_key=AZURE_OPENAI_API_KEY,
 )
+
 
 # Tries 1 times with a delay of 10 seconds between each attempt
 # @retry(stop_after_attempt(1),wait_fixed(10))
@@ -21,35 +21,38 @@ def rewrite_query(query: str) -> str:
     optimized for knowledge-base retrieval.
     """
     response = client.chat.completions.create(
-            model=AZURE_CHAT_DEPLOYMENT,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You rewrite customer support questions for "
-                        "knowledge-base search. "
-                        "Return only the rewritten search query. "
-                        "Preserve the user's intent and important terms. "
-                        "Do not answer the question."
-                    ),
-                },
-                {
-                    "role": "user",
-                    "content": query,
-                },
-            ],
-            temperature=0,
-        )
+        model=AZURE_CHAT_DEPLOYMENT,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You rewrite customer support questions for "
+                    "knowledge-base search. "
+                    "Return only the rewritten search query. "
+                    "Preserve the user's intent and important terms. "
+                    "Do not answer the question."
+                ),
+            },
+            {
+                "role": "user",
+                "content": query,
+            },
+        ],
+        temperature=0,
+    )
     rewritten_query = response.choices[0].message.content.strip()
     return rewritten_query
 
-def get_rewritten_query(query:str)-> str:
+
+def get_rewritten_query(query: str) -> str:
     try:
         return rewrite_query(query)
     except Exception as e:
         print(str(e))
         print("Query Re-Writing has Failed probably due to LLM API failure: \n")
-        print("="*60,"\n")
-        print("Proceeding with empty Re-Written query and user query will be used as default")
-        print("="*60)
+        print("=" * 60, "\n")
+        print(
+            "Proceeding with empty Re-Written query and user query will be used as default"
+        )
+        print("=" * 60)
         return ""

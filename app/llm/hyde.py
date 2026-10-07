@@ -1,5 +1,3 @@
-
-
 from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_fixed
 from config import (
@@ -8,54 +6,54 @@ from config import (
     AZURE_OPENAI_ENDPOINT,
 )
 
-
 client = OpenAI(
     base_url=f"{AZURE_OPENAI_ENDPOINT.rstrip('/')}/openai/v1/",
     api_key=AZURE_OPENAI_API_KEY,
 )
 
+
 # Tries 1 times with a delay of 10 seconds between each attempt
 # @retry(stop_after_attempt(1),wait_fixed(10))
-def generate_hypothetical_answer(rewritten_query: str,query: str) -> str:
-
-    
+def generate_hypothetical_answer(rewritten_query: str, query: str) -> str:
     """
-    Generate a hypothetical answer to the user's question into a concise search reference 
+    Generate a hypothetical answer to the user's question into a concise search reference
     optimized for semantic based knowledge-base retrieval.
     """
     response = client.chat.completions.create(
         model=AZURE_CHAT_DEPLOYMENT,
         messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "Generate a concise hypothetical answer that represents "
-                        "the information likely to be found in a customer-support "
-                        "knowledge base. Include important technical terms and "
-                        "concepts from the user's question. "
-                        "Do not mention that the answer is hypothetical. "
-                        "Do not add unrelated information. "
-                        "Return only the hypothetical answer."                        
-                    ),
-                },
-                {
-                    "role": "user",
-                    "content": query if not rewritten_query else rewritten_query,
-                },
-            ],
-            temperature=0,
-        )
+            {
+                "role": "system",
+                "content": (
+                    "Generate a concise hypothetical answer that represents "
+                    "the information likely to be found in a customer-support "
+                    "knowledge base. Include important technical terms and "
+                    "concepts from the user's question. "
+                    "Do not mention that the answer is hypothetical. "
+                    "Do not add unrelated information. "
+                    "Return only the hypothetical answer."
+                ),
+            },
+            {
+                "role": "user",
+                "content": query if not rewritten_query else rewritten_query,
+            },
+        ],
+        temperature=0,
+    )
     hypothetical_answer = response.choices[0].message.content.strip()
     return hypothetical_answer
 
 
-def get_hypothetical_answer(rewritten_query:str,query)->str:
+def get_hypothetical_answer(rewritten_query: str, query) -> str:
     try:
-        return generate_hypothetical_answer(rewritten_query,query)
+        return generate_hypothetical_answer(rewritten_query, query)
     except Exception as e:
         print(str(e))
-        print("Hypothetical answer generator not responding probably due to LLM API failure: \n")
-        print("="*60,"\n")
+        print(
+            "Hypothetical answer generator not responding probably due to LLM API failure: \n"
+        )
+        print("=" * 60, "\n")
         print("Proceeding without hypothetical answer")
-        print("="*60)
+        print("=" * 60)
         return None

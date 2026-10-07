@@ -1,6 +1,6 @@
-from fastapi import FastAPI,HTTPException,APIRouter, UploadFile, File
+from fastapi import FastAPI, HTTPException, APIRouter, UploadFile, File
 from api.response_object import Response_Object
-from pydantic import Field,BaseModel
+from pydantic import Field, BaseModel
 from app.llm.query_rewriter import get_rewritten_query
 from app.llm.prompt import build_prompt
 from app.llm.service import get_answer
@@ -15,48 +15,52 @@ from azure.storage.blob import BlobServiceClient
 from azure.search.documents.indexes import SearchIndexerClient
 from azure.core.credentials import AzureKeyCredential
 import logging
-logger=logging.getLogger(__name__)
-from config import(
+
+logger = logging.getLogger(__name__)
+from config import (
     AZURE_STORAGE_CONNECTION_STRING,
     AZURE_STORAGE_CONTAINER1,
     AZURE_SEARCH_ENDPOINT,
     AZURE_SEARCH_API_KEY,
     AZURE_SEARCH_INDEXER1,
 )
-router=APIRouter(tags=["API"])
 
-
+router = APIRouter(tags=["API"])
 
 
 @router.post("/get_response")
-def response(response_object:Response_Object):
-    query=response_object.query
+def response(response_object: Response_Object):
+    query = response_object.query
     if not query.strip():
         raise HTTPException(
             status_code=400,
             detail="Query cannot be empty.",
         )
-    k=get_retrieval_decision(query)
+    k = get_retrieval_decision(query)
     # print(k)
-    if  k:        
-        orchestrator=Orchestrator()
-        rewritten_query = get_rewritten_query(query)       
-        decision=orchestrator.get_decision(query,rewritten_query)
+    if k:
+        orchestrator = Orchestrator()
+        rewritten_query = get_rewritten_query(query)
+        decision = orchestrator.get_decision(query, rewritten_query)
         print("\nOriginal query:")
         print(query)
 
         print("\nRewritten query:")
         print(rewritten_query)
-         
-        hypothetical_answer=get_hypothetical_answer(rewritten_query,query)
+
+        hypothetical_answer = get_hypothetical_answer(rewritten_query, query)
         print("\nHypothetical answer:")
         print(hypothetical_answer)
-        
-        documents = hybrid_search(rewritten_query,decision["documents"])
+
+        documents = hybrid_search(rewritten_query, decision["documents"])
         print(f"\nRetrieved {len(documents)} documents.")
-        
-        h_documents=hyde_retrieval(hypothetical_answer,decision["documents"]) if hypothetical_answer else []
-        
+
+        h_documents = (
+            hyde_retrieval(hypothetical_answer, decision["documents"])
+            if hypothetical_answer
+            else []
+        )
+
         # for i in documents:
         #     print(i)
         reranked_documents = rerank_documents(
@@ -64,11 +68,11 @@ def response(response_object:Response_Object):
             documents=documents,
             top_k=5,
         )
-        
-        context_documents=build_context(reranked_documents)
-        #print("context documents: ",context_documents)
+
+        context_documents = build_context(reranked_documents)
+        # print("context documents: ",context_documents)
         print("\nReranked documents:\n")
-        
+
         for i, document in enumerate(
             reranked_documents,
             start=1,
@@ -76,22 +80,22 @@ def response(response_object:Response_Object):
             print(f"--- Result {i} ---")
             print(f"Source: {document['source']}")
             print(f"Search score: {document['score']}")
-            if document['rerank_score']:
+            if document["rerank_score"]:
                 print(f"Rerank score: {document['rerank_score']}")
             print(document["content"][:500])
             print()
 
         reranked_h_documents = rerank_documents(
-                query=query,
-                documents=h_documents,
-                top_k=5,
-            )
-            
-        #context_h_documents=build_context(reranked_h_documents)
+            query=query,
+            documents=h_documents,
+            top_k=5,
+        )
+
+        # context_h_documents=build_context(reranked_h_documents)
     else:
-        rewritten_query=""
-        context_documents=[]
-        reranked_h_documents=[]
+        rewritten_query = ""
+        context_documents = []
+        reranked_h_documents = []
     prompt = build_prompt(
         query=query,
         documents=context_documents,
@@ -105,11 +109,18 @@ def response(response_object:Response_Object):
     print("=" * 60)
     print(answer)
     if rewritten_query:
-        return "Re-written query is : " + rewritten_query+ \
-        "\n\nHypothetical answer:"+hypothetical_answer + \
-        "\n\nReason: " + decision["reason"] + " \n\n LLM response is :"+ answer
+        return (
+            "Re-written query is : "
+            + rewritten_query
+            + "\n\nHypothetical answer:"
+            + hypothetical_answer
+            + "\n\nReason: "
+            + decision["reason"]
+            + " \n\n LLM response is :"
+            + answer
+        )
     else:
-        return " \n\n LLM response is :"+ answer 
+        return " \n\n LLM response is :" + answer
 
 
 blob_service_client = BlobServiceClient.from_connection_string(
@@ -121,6 +132,7 @@ search_indexer_client = SearchIndexerClient(
     credential=AzureKeyCredential(AZURE_SEARCH_API_KEY),
 )
 
+
 # @router.post("/upload_Technical")
 @router.post("/documents/upload")
 async def upload_document(file: UploadFile = File(...)):
@@ -129,17 +141,13 @@ async def upload_document(file: UploadFile = File(...)):
     filename = file.filename
 
     if not filename:
-        raise HTTPException(
-            status_code=400,
-            detail="Filename is required."
-        )
+        raise HTTPException(status_code=400, detail="Filename is required.")
 
     extension = "." + filename.split(".")[-1].lower()
 
     if extension not in allowed_extensions:
         raise HTTPException(
-            status_code=400,
-            detail="Only PDF, DOCX, TXT and MD files are supported."
+            status_code=400, detail="Only PDF, DOCX, TXT and MD files are supported."
         )
 
     try:
@@ -169,9 +177,7 @@ async def upload_document(file: UploadFile = File(...)):
             "Blob uploaded successfully: %s",
             blob_client.url,
         )
-        search_indexer_client.run_indexer(
-                    AZURE_SEARCH_INDEXER1
-                )
+        search_indexer_client.run_indexer(AZURE_SEARCH_INDEXER1)
 
         return {
             "message": "Document uploaded successfully. Indexing has been started.",
@@ -183,6 +189,5 @@ async def upload_document(file: UploadFile = File(...)):
         logger.exception("Document upload/indexing failed")
 
         raise HTTPException(
-            status_code=500,
-            detail="Document upload or indexing failed."
+            status_code=500, detail="Document upload or indexing failed."
         )

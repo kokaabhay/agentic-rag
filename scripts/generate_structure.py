@@ -1,7 +1,6 @@
-#python script to generate the structure of the project
+# python script to generate the structure of the project
 from pathlib import Path
 import ast
-
 
 # ============================================================
 # Configuration
@@ -35,7 +34,6 @@ HIDDEN_DIRS = {
 HIDDEN_FILES = {
     ".DS_Store",
     "Thumbs.db",
-    
 }
 
 # File extensions that should be hidden
@@ -48,6 +46,7 @@ HIDDEN_EXTENSIONS = {
 # ============================================================
 # Filtering
 # ============================================================
+
 
 def should_hide(path: Path) -> bool:
     """Return True if this file/directory should not appear at all."""
@@ -73,25 +72,17 @@ def should_collapse(path: Path) -> bool:
 # Directory Tree
 # ============================================================
 
+
 def generate_tree(directory: Path, prefix: str = "") -> list[str]:
     """Generate a clean project tree."""
 
     lines = []
 
     try:
-        entries = [
-            entry
-            for entry in directory.iterdir()
-            if not should_hide(entry)
-        ]
+        entries = [entry for entry in directory.iterdir() if not should_hide(entry)]
 
         # Directories first, then files
-        entries.sort(
-            key=lambda p: (
-                p.is_file(),
-                p.name.lower()
-            )
-        )
+        entries.sort(key=lambda p: (p.is_file(), p.name.lower()))
 
     except PermissionError:
         return lines
@@ -105,20 +96,15 @@ def generate_tree(directory: Path, prefix: str = "") -> list[str]:
         # Show directory but don't open it
         if should_collapse(entry):
             lines.append(
-                f"{prefix}{'    ' if is_last else '│   '}"
-                f"└── [contents excluded]"
+                f"{prefix}{'    ' if is_last else '│   '}" f"└── [contents excluded]"
             )
             continue
 
         # Recursively expand normal directories
         if entry.is_dir():
-            new_prefix = prefix + (
-                "    " if is_last else "│   "
-            )
+            new_prefix = prefix + ("    " if is_last else "│   ")
 
-            lines.extend(
-                generate_tree(entry, new_prefix)
-            )
+            lines.extend(generate_tree(entry, new_prefix))
 
     return lines
 
@@ -126,6 +112,7 @@ def generate_tree(directory: Path, prefix: str = "") -> list[str]:
 # ============================================================
 # Python File Analysis
 # ============================================================
+
 
 def analyze_python_file(file_path: Path) -> dict:
     """Extract useful architecture information from a Python file."""
@@ -137,10 +124,7 @@ def analyze_python_file(file_path: Path) -> dict:
     }
 
     try:
-        source = file_path.read_text(
-            encoding="utf-8",
-            errors="ignore"
-        )
+        source = file_path.read_text(encoding="utf-8", errors="ignore")
 
         tree = ast.parse(source)
 
@@ -191,9 +175,7 @@ def find_python_files(directory: Path) -> list[Path]:
                     python_files.append(path)
 
             elif path.is_dir():
-                python_files.extend(
-                    find_python_files(path)
-                )
+                python_files.extend(find_python_files(path))
 
     except PermissionError:
         pass
@@ -204,6 +186,7 @@ def find_python_files(directory: Path) -> list[Path]:
 # ============================================================
 # Markdown Generation
 # ============================================================
+
 
 def generate_markdown(project_root: Path) -> str:
 
@@ -276,9 +259,7 @@ def generate_markdown(project_root: Path) -> str:
                 markdown.append("")
 
             if not any(info.values()):
-                markdown.append(
-                    "No classes, functions, or imports detected."
-                )
+                markdown.append("No classes, functions, or imports detected.")
                 markdown.append("")
 
     # --------------------------------------------------------
@@ -320,6 +301,7 @@ def generate_markdown(project_root: Path) -> str:
 # Main
 # ============================================================
 
+
 def main():
 
     # The directory containing this script is the project root
@@ -329,10 +311,7 @@ def main():
 
     content = generate_markdown(project_root)
 
-    output_file.write_text(
-        content,
-        encoding="utf-8"
-    )
+    output_file.write_text(content, encoding="utf-8")
 
     print("Project architecture generated successfully.")
     print(f"Project root : {project_root}")
